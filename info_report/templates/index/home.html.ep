@@ -15,6 +15,7 @@
                     <nav class="nav nav-masthead">
                         <a class="nav-link active" href="#">Home</a>
                         <a class="nav-link" href="#last">Last Reports</a>
+                        <a class="nav-link" href="#popular">Most Popular</a>
                         <a class="nav-link" href="#about">About</a>
                     </nav>
                 </div>
