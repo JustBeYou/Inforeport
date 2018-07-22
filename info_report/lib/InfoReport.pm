@@ -14,8 +14,7 @@ sub startup {
   # Router
   my $r = $self->routes;
 
-  # Normal route to controller
-  $r->get('/')->to('example#welcome');
+  $r->get('/')->to('index#home');
 }
 
 1;
