@@ -1,9 +1,11 @@
 % layout 'default';
 % title  'InfoReport';
 
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.1/css/all.css" integrity="sha384-O8whS3fhG2OnA5Kas0Y9l3cfpmYjapjI0E4theH4iuMD+pLhbf6JI0jIMfYcK3yZ" crossorigin="anonymous">
 <link href="cover.css" rel="stylesheet">
 <link href="searchbox.css" rel="stylesheet">
+<link href="loader.css" rel="stylesheet">
 
 <div class="site-wrapper">
     <div class="site-wrapper-inner">
@@ -36,6 +38,8 @@
                         </button>
                     </div>
                 </div>
+
+                <div id="loader_section"></div>
 		</form>
            </div>
 
@@ -50,8 +54,54 @@
 </div>
 
 <script>
+function deleteLoader() {
+    $("#loader_section").empty();
+}
+
+function generateNewReport(username) {
+    console.log("To be implemented");
+    deleteLoader();
+}
+
+function checkIfChanged(username, userData) {
+    $.ajax({
+        url: "/user/" + username + "/scrape/last",
+        type: 'get',
+        error: function (XMLHttpRequest, textStatus, errorThrown) {
+            console.log("[ERROR] " + XMLHttpRequest.status + " " + XMLHttpRequest.statusText);
+            deleteLoader();
+        },
+        success: function (lastEntry) {
+            if (userData['lastEntry'] == lastEntry) {
+                console.log("[INFO] No new entries, reading from database");
+                // TODO: implement this
+            } else {
+                generateNewReport();
+            }
+        }
+    });
+}
+
 function generateReport() {
     var username = document.getElementById("username").value;
     console.log("[INFO] Report must be generated for %s", username);
+
+    $("#loader_section").append("<h3 id=\"loader\">Loading...</h3> <i id=\"loader\" class=\"fa fa-spinner fa-spin\" style=\"font-size:24px\"></i>");
+
+    $.ajax({
+        url: "/user/" + username,
+        type: 'get',
+        error: function (XMLHttpRequest, textStatus, errorThrown) {
+            if (XMLHttpRequest.status == 404) {
+                generateNewReport(username);
+            } else {
+                console.log("[ERROR] " + XMLHttpRequest.status + " " + XMLHttpRequest.statusText);
+                deleteLoader();
+            }
+        },
+        success: function (data) {
+            checkIfChanged(username, data);
+        }
+    });
 }
 </script>
