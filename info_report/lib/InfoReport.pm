@@ -1,5 +1,6 @@
 package InfoReport;
 use Mojo::Base 'Mojolicious';
+use InfoReport::Model::Scraper;
 
 # This method will run once at server start
 sub startup {
@@ -15,6 +16,8 @@ sub startup {
   my $r = $self->routes;
 
   $r->get('/')->to('index#home');
+
+  my $data = InfoReport::Model::Scraper::getUserSubmissions('GavrilaVlad', 0);
 }
 
 1;
