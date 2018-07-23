@@ -71,9 +71,13 @@ sub getUserSubmissions {
             $score = -1;
         }
 
-        my @toAdd = InfoReport::Model::Submission->new(
+        for my $i (0..$#attributes) {
+            $attributes[$i] = $attributes[$i]->as_trimmed_text;
+        }
+
+        my $toAdd = InfoReport::Model::Submission->new(
             id => $attributes[0],
-            username => $attributes[1],
+            username => $user,
             problem => $attributes[2],
             competition => $attributes[3],
             size => $attributes[4],
@@ -81,6 +85,8 @@ sub getUserSubmissions {
             status => "",
             score => 0
         );
+
+        push @submissions, $toAdd;
     }
 
     $tree->delete;
