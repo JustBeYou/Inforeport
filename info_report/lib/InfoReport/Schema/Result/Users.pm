@@ -1,4 +1,4 @@
-package InfoReport::Schema::Result::Post;
+package InfoReport::Schema::Result::Users;
 use base qw/DBIx::Class::Core/;
 
 # Associated table in database
@@ -8,6 +8,10 @@ __PACKAGE__->add_columns(
     id => {
         data_type => 'integer',
         is_auto_increment => 1,
+    },
+
+    username => {
+        data_type => 'text',
     },
 
     solved => {
