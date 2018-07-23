@@ -5,3 +5,5 @@ sub home {
     my $self = shift;
     $self->render('index/home');
 }
+
+1;

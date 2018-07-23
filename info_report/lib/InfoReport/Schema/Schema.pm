@@ -11,3 +11,5 @@ sub getConnection {
     my $self = shift;
     return $self->connection('dbi:SQLite:inforeport.db');
 }
+
+1;

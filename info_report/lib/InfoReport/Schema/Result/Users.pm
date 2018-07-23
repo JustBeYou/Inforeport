@@ -30,3 +30,5 @@ __PACKAGE__->add_columns(
         data_type => 'datetime',
     },
 );
+
+1;

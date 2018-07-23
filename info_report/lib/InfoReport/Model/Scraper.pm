@@ -86,3 +86,5 @@ sub getUserSubmissions {
     $tree->delete;
     return @submissions;
 }
+
+1;
