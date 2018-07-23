@@ -3,6 +3,9 @@ package InfoReport::Model::Scraper;
 use strict;
 use warnings;
 
+# HOW THIS SHOULD LOOK LIKE???
+use InfoReport::Model::Submission;
+
 use HTTP::Request ();
 use LWP::UserAgent;
 use LWP::Protocol::https;
@@ -10,6 +13,7 @@ use HTML::TreeBuilder::XPath;
 
 my $defaultUserAgent = 'Mozilla/5.0 (X11; Fedora; Linux x86_64; rv:61.0) Gecko/20100101 Firefox/61.0';
 my $submissionsPage = 'https://www.infoarena.ro/monitor?user=';
+my $monitorParameters = '&display_entries=250&first_entry=';
 
 sub get {
     my $url = shift;
@@ -33,7 +37,9 @@ sub getUserLastSubmissionDate {
 
 sub getUserSubmissions { 
     my $user = shift;
-    my $url = $submissionsPage.$user;
+    my $firstEntry = shift;
+
+    my $url = $submissionsPage.$user.$monitorParameters.$firstEntry;
     my $contents = get($url);
 
     my @submissions = ();
@@ -44,12 +50,39 @@ sub getUserSubmissions {
     my @rows = $tree->findnodes('//table[@class="monitor"]/tbody/tr');
     
     for my $row (@rows) {
+        my @attributes = ();
         for my $element ($row->content_list) {
+            push @attributes, $element;
         }
+        my $status;
+        my $score;
+
+        if ($attributes[6] eq "Submisie ignorata") {
+            $status = "ignored";
+            $score = -1;
+        } elsif ($attributes[6] eq "Evaluare completa") {
+            $status = "hidden";
+            $score = -1;
+        } elsif ($attributes[6] =~ m/Evaluare completa: \d+ puncte/g) {
+            $status = "complete";
+            $score = $&;
+        } else {
+            $status = "error";
+            $score = -1;
+        }
+
+        my @toAdd = InfoReport::Model::Submission->new(
+            id => $attributes[0],
+            username => $attributes[1],
+            problem => $attributes[2],
+            competition => $attributes[3],
+            size => $attributes[4],
+            date => $attributes[5],
+            status => "",
+            score => 0
+        );
     }
 
     $tree->delete;
     return @submissions;
 }
-
-my @s = getUserSubmissions("GavrilaVlad");
