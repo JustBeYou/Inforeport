@@ -13,8 +13,10 @@ sub userGET {
     my %defaultResponse = (message => 'Report for user '.$self->param('username').' not found.');
 
     if (defined $data) {
+        my %hashData = InfoReport::Model::Users::userQueryDataToHash($data);
+
         return $self->render(
-            json => {"message" => "TODO"}, 
+            json => \%hashData,
         );
     }
 
