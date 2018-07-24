@@ -30,7 +30,7 @@
                 <div class="input-group">
                     <input class="form-control" type="text" placeholder="Username" aria-label="Username" style="padding-left: 20px; border-radius: 40px;" id="username">
                     <div class="input-group-addon" style="margin-left: -50px; z-index: 3; border-radius: 40px; background-color: transparent; border:none;">
-                        <button class="btn btn-warning btn-sm" type="submit" style="border-radius: 20px;" id="search-btin" onclick="generateReport()">
+                        <button class="btn btn-warning btn-sm" style="border-radius: 20px;" id="search-btin">
                             <span class="fa-stack fa-lg">
                                 <i class="fa fa-circle fa-stack-2x icon-background"></i>
                                 <i class="fa fa-check-circle fa-stack-1x"></i>
@@ -54,17 +54,25 @@
 </div>
 
 <script>
+$("#search-btin").on("click", function(e) {
+    generateReport();
+    e.preventDefault();
+});
+
 function deleteLoader() {
     $("#loader_section").empty();
 }
 
 function displayReport(data) {
+    deleteLoader();
     console.log(data);
 }
 
 function generateNewReport(username) {
     $.ajax({
         url: "/users/" + username,
+        dataType: "json",
+        cache: false,
         type: 'post',
         error: function (XMLHttpRequest, textStatus, errorThrown) {
             console.log("[ERROR] " + XMLHttpRequest.status + " " + XMLHttpRequest.statusText);
@@ -72,25 +80,30 @@ function generateNewReport(username) {
         },
         success: function (data) {
             displayReport(data);
-            deleteLoader();
         }
     });
 }
 
-function checkIfChanged(username, userData) {
+function checkIfChanged(userData) {
+    var username = userData['username'];
+
     $.ajax({
         url: "/users/" + username + "/changed",
+        dataType: "json",
+        cache: false,
         type: 'get',
         error: function (XMLHttpRequest, textStatus, errorThrown) {
             console.log("[ERROR] " + XMLHttpRequest.status + " " + XMLHttpRequest.statusText);
             deleteLoader();
         },
+        
         success: function (changed) {
+            console.log(changed);
             if (!changed['value']) {
                 console.log("[INFO] No new entries, displaying...");
                 displayReport(userData);
             } else {
-                generateNewReport();
+                generateNewReport(changed['username']);
             }
         }
     });
@@ -104,9 +117,12 @@ function generateReport() {
 
     $.ajax({
         url: "/users/" + username,
+        dataType: "json",
+        cache: false,
         type: 'get',
         error: function (XMLHttpRequest, textStatus, errorThrown) {
             if (XMLHttpRequest.status == 404) {
+                console.log("[INFO] Report not found, let's create it");
                 generateNewReport(username);
             } else {
                 console.log("[ERROR] " + XMLHttpRequest.status + " " + XMLHttpRequest.statusText);
@@ -114,7 +130,8 @@ function generateReport() {
             }
         },
         success: function (data) {
-            checkIfChanged(username, data);
+            console.log(data);
+            checkIfChanged(data);
         }
     });
 }
