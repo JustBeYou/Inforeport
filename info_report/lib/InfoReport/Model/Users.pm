@@ -70,7 +70,7 @@ sub updateUserData {
             username => $username,
             totalSubmissions => $userActivity{totalSubmissions},
             activityData => encode_json \%userActivity,
-            lastSubmission => InfoReport::Model::Scraper::getUserLastSubmissionDate(),
+            lastSubmission => InfoReport::Model::Scraper::getUserLastSubmissionDate($username),
             solved => $userActivity{solved}
             });
     }
@@ -107,15 +107,16 @@ sub checkIfUserChanged {
 
     %data = userQueryDataToHash($data); 
 
-    $lastDate = InfoReport::Model::Scraper::getUserLastSubmissionDate();
+    print "$lastDate $data{lastSubmission}\n";
+    $lastDate = InfoReport::Model::Scraper::getUserLastSubmissionDate($username);
     if ($lastDate eq $data{lastSubmission}) { return 0; }
 
     return 1;
 }
 
-sub generateActivityReport {
+sub checkIfUserExists {
     my $username = shift;
-    my $data     = shift;
+    return InfoReport::Model::Scraper::checkUser($username);
 }
 
 1;

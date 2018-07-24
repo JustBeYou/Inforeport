@@ -26,6 +26,14 @@ sub get {
     return $res->as_string();
 }
 
+sub checkUser {
+    my $username = shift;
+    my $pageContent = get($submissionsPage.$username);
+
+    $pageContent =~ m/Nici o solutie in coada de evaluare/;
+    return not $&;
+}
+
 sub getUserLastSubmissionDate {
     my $user = shift;
     my $url = $submissionsPage.$user;
