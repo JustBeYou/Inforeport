@@ -1,16 +1,16 @@
 package InfoReport::Model::Users;
 use InfoReport::Schema;
 use InfoReport::Model::Scraper;
+use JSON;
 
 my $schema = InfoReport::Schema->getConnection();
 my $resultset = $schema->resultset('Users');
 
-# debug
-use Data::Dumper;
-
 sub generateUserActivity {
     my @data = @_;
     my %activity = ();
+    $activity{totalSubmissions} = scalar @data;
+    $activity{solved} = 0;
 
     my $year, $month, $day;
     foreach my $elem (@data) {
@@ -47,8 +47,9 @@ sub generateUserActivity {
         } else {
             $activity{$year}{months}{$month}{days}{$day} = 1;
         }
+
+        $activity{solved} += $elem->{score} eq "100" ? 1 : 0;
     }
-    print Dumper(\%activity)."\n\n";
 
     return %activity;
 }
@@ -64,9 +65,15 @@ sub updateUserData {
         # else create entry
         @submissions = InfoReport::Model::Scraper::scrapeUser($username);
         %userActivity = generateUserActivity(@submissions);               
+      
+        $resultset->create({
+            username => $username,
+            totalSubmissions => $userActivity{totalSubmissions},
+            activityData => encode_json \%userActivity,
+            lastSubmission => InfoReport::Model::Scraper::getUserLastSubmissionDate(),
+            solved => $userActivity{solved}
+            });
     }
-
-
 }
 
 sub readUserData {
@@ -84,9 +91,8 @@ sub userQueryDataToHash {
         $hash{id} = $data->id;
         $hash{username} = $data->username;
         $hash{solved} = $data->solved;
-        $hash{tried} = $data->tried;
         $hash{totalSubmissions} = $data->totalSubmissions;
-        $hash{activityData} = $data->activityData;
+        $hash{activityData} = decode_json $data->activityData;
         $hash{lastSubmission} = $data->lastSubmission;
     }
 
@@ -95,7 +101,14 @@ sub userQueryDataToHash {
 
 sub checkIfUserChanged {
     my $username = shift;
-    my $lastDate = shift;
+    
+    $data = readUserData($username);
+    if (not defined $data) { return 1; }
+
+    %data = userQueryDataToHash($data); 
+
+    $lastDate = InfoReport::Model::Scraper::getUserLastSubmissionDate();
+    if ($lastDate eq $data{lastSubmission}) { return 0; }
 
     return 1;
 }
