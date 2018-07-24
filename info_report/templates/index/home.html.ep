@@ -6,6 +6,9 @@
 <link href="cover.css" rel="stylesheet">
 <link href="searchbox.css" rel="stylesheet">
 <link href="loader.css" rel="stylesheet">
+<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/plottable.js/2.0.0/plottable.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/plottable.js/2.0.0/plottable.css" rel="stylesheet">
 
 <div class="site-wrapper">
     <div class="site-wrapper-inner">
@@ -24,7 +27,7 @@
             </div>
 
             <div class="inner cover">
-                <h1 class="cover-heading">Easy and fast Infoarena reports</h1>
+                <h1 class="cover-heading">Infoarena activity reports</h1>
                 <p class="lead">Type in your username and click the button and in few seconds you'll see your report</p>
                 <form class="form">
                 <div class="input-group">
@@ -39,8 +42,10 @@
                     </div>
                 </div>
 
-                <div id="loader_section"></div>
-		</form>
+                <div id="loader_section" style="margin-top: 40px;"></div> 
+        </form>
+
+           <svg id="graph_section"></svg>
            </div>
 
             <div class="mastfoot">
@@ -63,9 +68,144 @@ function deleteLoader() {
     $("#loader_section").empty();
 }
 
-function displayReport(data) {
+// Returns an array of dates between the two dates
+var getDates = function(startDate, endDate) {
+  var dates = [],
+      currentDate = startDate,
+      addDays = function(days) {
+        var date = new Date(this.valueOf());
+        date.setDate(date.getDate() + days);
+        return date;
+      };
+  while (currentDate <= endDate) {
+    dates.push(currentDate);
+    currentDate = addDays.call(currentDate, 1);
+  }
+  return dates;
+};
+
+function displayReport(userData) {
     deleteLoader();
+    console.log(userData);
+    var data = [];
+
+    userData = userData['activityData'];
+
+    //var dates_zero = getDates(new Date(2018,1,1), new Date(2018,12,30)); 
+
+    var romanianMonths = ['ian', 'feb', 'mar', 'apr', 'mai', 'iun', 'iul', 'aug', 'sep', 'oct', 'noi', 'dec'];
+    for (var month in userData['2018']['months']) {
+        for (var day in userData['2018']['months'][month]['days']) {
+            var month__ = (romanianMonths.indexOf(month)+1).toString();
+            if (month__.length < 2) month__ = "0" + month__;
+            var day__ = day;
+            if (day__.length < 2) day__ = "0" + day__;
+
+            //dates_zero.splice(dates_zero.indexOf(new Date(date)), 1);
+
+            var date = month__ + '-' + day__  + '-2018';
+            console.log(date);
+            data.push({
+                date: new Date(date),
+                val: userData['2018']['months'][month]['days'][day] / userData['2018']['months'][month]['totalSubmissions'] * 2
+            });
+        }
+    }
+/*
+    for (var date in dates_zero) {
+        console.log(date);
+        data.push({
+            date: date,
+            val: 0
+        });
+    }
+*/
     console.log(data);
+
+    var daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+    // Gets the date of the top left square in the calendar, i.e. the first Sunday on / before Jan 1
+    function getFirstDisplayableSunday(date) {
+      return new Date(
+        date.getFullYear(),
+        0,
+        1 - new Date(date.getFullYear(), 0, 1).getDay()
+      );
+    }
+
+    function getWeekOfTheYear(date) {
+      var firstSunday = getFirstDisplayableSunday(date);
+      var diff = date - firstSunday;
+      var oneDay = 1000 * 60 * 60 * 24;
+      return Math.floor(Math.ceil(diff / oneDay) / 7);
+    }
+
+    function monthFormatter() {
+      return function(yearAndWeek) {
+        var year = yearAndWeek[0];
+        var week = yearAndWeek[1];
+        var startOfWeek = new Date(year, 0, (week + 1) * 7 - new Date(year, 0, 1).getDay());
+        if (startOfWeek.getDate() > 7) {
+          return "";
+        }
+        return months[startOfWeek.getMonth()];
+      }
+    }
+
+    var xScale = new Plottable.Scales.Category();
+    var yScale = new Plottable.Scales.Category();
+    yScale.domain(daysOfWeek);
+
+    var xAxis = new Plottable.Axes.Category(xScale, "bottom");
+    var yAxis = new Plottable.Axes.Category(yScale, "left");
+    xAxis.formatter(monthFormatter());
+
+    var colorScale = new Plottable.Scales.InterpolatedColor();
+    colorScale.domain([0,1]);
+    colorScale.range(["#eee", "#d6e685", "#8cc665", "#44a340", "#1e6823"]);
+
+    var plot = new Plottable.Plots.Rectangle()
+      .addDataset(new Plottable.Dataset(data))
+      .x(function(d) { return [d.date.getFullYear(), getWeekOfTheYear(d.date)] }, xScale)
+      .y(function(d) { return daysOfWeek[d.date.getDay()] }, yScale)
+      .attr("fill", function(d) { return d.val; }, colorScale)
+      .attr("stroke", "#fff")
+      .attr("stroke-width", 2);
+
+    var plotHighlighter = new Plottable.Plots.Rectangle()
+      .addDataset(new Plottable.Dataset(data))
+      .x(function(d) { return [d.date.getFullYear(), getWeekOfTheYear(d.date)] }, xScale)
+      .y(function(d) { return daysOfWeek[d.date.getDay()] }, yScale)
+      .attr("fill", "black")
+      .attr("fill-opacity", 0);
+
+    var group = new Plottable.Components.Group([plot, plotHighlighter]);
+
+    var interaction = new Plottable.Interactions.Pointer();
+    interaction.onPointerMove(function(p) {
+      var nearestEntity = plotHighlighter.entityNearest(p);
+      var hoveredMonth = nearestEntity.datum.date.getMonth();
+      plotHighlighter.entities().forEach(function(entity) {
+        var date = entity.datum.date;
+        entity.selection.attr("fill-opacity", date.getMonth() === hoveredMonth ? 0.5 : 0);
+      });
+    })
+    interaction.onPointerExit(function() {
+      plotHighlighter.entities().forEach(function(entity) {
+        entity.selection.attr("fill-opacity", 0);
+      });
+    })
+    interaction.attachTo(plot);
+
+    var table = new Plottable.Components.Table([
+      [yAxis, group],
+      [null,  xAxis]
+    ]);
+
+    table.renderTo("svg#graph_section");
+
+
 }
 
 function generateNewReport(username) {
