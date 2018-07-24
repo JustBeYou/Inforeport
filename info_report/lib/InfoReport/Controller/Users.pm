@@ -9,6 +9,13 @@ use InfoReport::Model::Users;
 sub userGET {
     my $self = shift;
 
+    if (not InfoReport::Model::Users::checkIfUserExists($self->param('username'))) {
+        my %notFound = (message => 'User '.$self->param('username').' not found or it does not have any submissions.');
+        return $self->render(
+            json => \%notFound,
+        );
+    }
+
     my $data = InfoReport::Model::Users::readUserData($self->param('username'));
     my %defaultResponse = (message => 'Report for user '.$self->param('username').' not found.');
 
@@ -21,12 +28,21 @@ sub userGET {
     }
 
     return $self->render(
+        status => 404,
         json => \%defaultResponse,
     );
 }
 
 sub userPOST {
     my $self = shift;
+
+    if (not InfoReport::Model::Users::checkIfUserExists($self->param('username'))) {
+        my %notFound = (message => 'User '.$self->param('username').' not found or it does not have any submissions.');
+        return $self->render(
+            json => \%notFound,
+        );
+    }    
+
     InfoReport::Model::Users::updateUserData($self->param('username'));
     my $data = InfoReport::Model::Users::readUserData($self->param('username'));
     my %hashData = InfoReport::Model::Users::userQueryDataToHash($data);
@@ -39,7 +55,10 @@ sub userPOST {
 sub changedGET {
     my $self = shift;
     return $self->render(
-        json => {value => InfoReport::Model::Users::checkIfUserChanged($self->param('username'))},
+        json => {
+            value => InfoReport::Model::Users::checkIfUserChanged($self->param('username')),
+            username => $self->param('username'),
+        },
     );
 }
 
