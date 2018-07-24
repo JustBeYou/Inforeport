@@ -61,6 +61,15 @@ sub updateUserData {
 
     if (defined $data and checkIfUserChanged($username)) {
         # if already exists, update
+        @submissions = InfoReport::Model::Scraper::scrapeUser($username);
+        %userActivity = generateUserActivity(@submissions);
+        
+        $data->update({
+            totalSubmissions => $userActivity{totalSubmissions},
+            activityData => encode_json \%userActivity,
+            lastSubmission => InfoReport::Model::Scraper::getUserLastSubmissionDate($username),
+            solved => $userActivity{solved}
+            });
     } else {
         # else create entry
         @submissions = InfoReport::Model::Scraper::scrapeUser($username);
