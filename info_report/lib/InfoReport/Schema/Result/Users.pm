@@ -18,10 +18,6 @@ __PACKAGE__->add_columns(
         data_type => 'integer',
     },
 
-    tried => {
-        data_type => 'integer',
-    },
-
     totalSubmissions => {
         data_type => 'integer',
     },
@@ -31,8 +27,10 @@ __PACKAGE__->add_columns(
     },
 
     lastSubmission => {
-        data_type => 'datetime',
+        data_type => 'text',
     },
 );
+
+__PACKAGE__->set_primary_key('id');
 
 1;
