@@ -28,16 +28,18 @@ sub userGET {
 sub userPOST {
     my $self = shift;
     InfoReport::Model::Users::updateUserData($self->param('username'));
+    my $data = InfoReport::Model::Users::readUserData($self->param('username'));
+    my %hashData = InfoReport::Model::Users::userQueryDataToHash($data);
 
     return $self->render(
-        json => {message => ''},
+        json => \%hashData,
     );
 }
 
 sub changedGET {
     my $self = shift;
     return $self->render(
-        json => {message => 'Not implemented'},
+        json => {value => InfoReport::Model::Users::checkIfUserChanged($self->param('username'))},
     );
 }
 
