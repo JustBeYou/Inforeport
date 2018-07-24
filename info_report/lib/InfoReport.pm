@@ -22,7 +22,7 @@ sub startup {
   $r->get('/')->to('index#home');
   $r->get('/users/:username')->to('users#userGET');
   $r->post('/users/:username')->to('users#userPOST');
-  $r->get('/users/:username')->to('users#changedGET');
+  $r->get('/users/:username/changed')->to('users#changedGET');
 }
 
 1;
