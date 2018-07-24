@@ -93,4 +93,19 @@ sub getUserSubmissions {
     return @submissions;
 }
 
+sub scrapeUser {
+    my $username = shift;
+
+    my @submissions = ();
+    my $index = 0;
+    my @toAdd = getUserSubmissions($username, $index);
+    while (@toAdd) {
+        push @submissions, @toAdd;
+        $index += 250;
+        @toAdd = getUserSubmissions($username, $index);
+    }
+
+    return @submissions;
+}
+
 1;
