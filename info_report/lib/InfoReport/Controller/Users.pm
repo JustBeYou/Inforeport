@@ -10,6 +10,8 @@ sub userGET {
     my $self = shift;
 
     if (not InfoReport::Model::Users::checkIfUserExists($self->param('username'))) {
+        print "Username does not exists: ".$self->param('username')."\n";
+
         my %notFound = (message => 'User '.$self->param('username').' not found or it does not have any submissions.');
         return $self->render(
             json => \%notFound,

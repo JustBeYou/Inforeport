@@ -9,6 +9,11 @@
 <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/plottable.js/2.0.0/plottable.min.js"></script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/plottable.js/2.0.0/plottable.css" rel="stylesheet">
+<style>
+.plottable .axis text {
+  fill: white;
+}
+</style>
 
 <div class="site-wrapper">
     <div class="site-wrapper-inner">
@@ -28,7 +33,7 @@
 
             <div class="inner cover">
                 <h1 class="cover-heading">Infoarena activity reports</h1>
-                <p class="lead">Type in your username and click the button and in few seconds you'll see your report</p>
+                <p class="lead">Type in your username and in few seconds you'll see your report</p>
                 <form class="form">
                 <div class="input-group">
                     <input class="form-control" type="text" placeholder="Username" aria-label="Username" style="padding-left: 20px; border-radius: 40px;" id="username">
@@ -93,7 +98,7 @@ function displayReport(userData) {
 
     //var dates_zero = getDates(new Date(2018,1,1), new Date(2018,12,30)); 
 
-    var romanianMonths = ['ian', 'feb', 'mar', 'apr', 'mai', 'iun', 'iul', 'aug', 'sep', 'oct', 'noi', 'dec'];
+    var romanianMonths = ['ian', 'feb', 'mar', 'apr', 'mai', 'iun', 'iul', 'aug', 'sep', 'oct', 'nov', 'dec'];
     for (var month in userData['2018']['months']) {
         for (var day in userData['2018']['months'][month]['days']) {
             var month__ = (romanianMonths.indexOf(month)+1).toString();
@@ -103,7 +108,9 @@ function displayReport(userData) {
 
             //dates_zero.splice(dates_zero.indexOf(new Date(date)), 1);
 
-            var date = month__ + '-' + day__  + '-2018';
+            console.log(day, month, day__, month__);
+            //var date = month__ + '-' + day__  + '-2018';
+            var date = '2018-' + month__ + '-' + day__; 
             console.log(date);
             data.push({
                 date: new Date(date),
